@@ -1,0 +1,35 @@
+name: flutterwebapp
+description: "A WebView app for Android and iOS in Flutter."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.9.0
+  webview_flutter_android: ^3.16.7
+  webview_flutter_wkwebview: ^3.15.0
+  flutter_native_splash: ^2.4.1
+  url_launcher: ^6.3.0
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: lib/images/android.png
+  android: true
+  ios: true
+  web: false
+  android_gravity: center
+  ios_content_mode: center
+  fullscreen: true  
+
+flutter:
+  uses-material-design: true
