@@ -42,10 +42,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
           });
         },
         onWebResourceError: (error) {
-          setState(() {
-            hasInternetConnection = false;
-          });
-          debugPrint('Could not load URL: ${error.errorCode}, ${error.errorType}');
+          if (error.errorType != WebResourceErrorType.unknown) {
+            setState(() {
+              hasInternetConnection = false;
+            });
+          }
         },
       ))
       ..loadRequest(Uri.parse(widget.url));
@@ -124,10 +125,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       );
     } else {
       const snackBar = SnackBar(content: Text('Unable to handle your request'));
-      if(context.mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
   }
-
 }
