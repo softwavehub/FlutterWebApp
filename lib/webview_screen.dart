@@ -12,7 +12,7 @@ class WebViewScreen extends StatefulWidget {
 }
 
 class _WebViewScreenState extends State<WebViewScreen> {
-  late final WebViewController controller;
+  late final WebViewController webViewController;
   var loadingPercentage = 0;
   bool hasInternetConnection = true;
 
@@ -23,11 +23,10 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   void initializeWebView() {
-    controller = WebViewController()
+    webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: (NavigationRequest request) async {
-          debugPrint('loading url ${request.url}');
           // If URL is external, open it in a relevant app
           if (request.url.startsWith(widget.url)) {
             return NavigationDecision.navigate;
@@ -42,10 +41,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
           });
         },
         onWebResourceError: (error) {
-          setState(() {
-            hasInternetConnection = false;
-          });
-          debugPrint('Could not load URL: ${error.errorCode}, ${error.errorType}');
+          if (error.errorType != WebResourceErrorType.unknown) {
+            setState(() {
+              hasInternetConnection = false;
+            });
+          }
         },
       ))
       ..loadRequest(Uri.parse(widget.url));
@@ -56,39 +56,52 @@ class _WebViewScreenState extends State<WebViewScreen> {
       loadingPercentage = 0;
       hasInternetConnection = true;
     });
-    controller.reload();
+    webViewController.reload();
   }
 
-  Future<bool> handleBackButton() async {
-    bool canGoBack = await controller.canGoBack();
+  void goToPreviousPage(bool canGoBack) {
     if (canGoBack) {
-      controller.goBack();
-      return false;
+      webViewController.goBack();
     }
-    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: WillPopScope(
-        onWillPop: handleBackButton,
-        child: Scaffold(
-          body: hasInternetConnection
-              ? Stack(
-                  children: [
-                    Container(
-                      child: WebViewWidget(controller: controller),
-                    ),
-                    if (loadingPercentage > 0 && loadingPercentage < 100)
-                      LinearProgressIndicator(
-                        value: loadingPercentage / 100.0,
-                      ),
-                  ],
-                )
-              : showNetworkErrorScreen(),
-        ),
-      ),
+      child: FutureBuilder(
+          future: webViewController.canGoBack(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final canWebViewGoBack = snapshot.data as bool;
+              return PopScope(
+                canPop: !canWebViewGoBack,
+                onPopInvokedWithResult: (didPop, result) {
+                  if (!didPop) {
+                    goToPreviousPage(canWebViewGoBack);
+                  }
+                },
+                child: Scaffold(
+                  body: hasInternetConnection
+                      ? Stack(
+                          children: [
+                            Container(
+                              child:
+                                  WebViewWidget(controller: webViewController),
+                            ),
+                            if (loadingPercentage > 0 &&
+                                loadingPercentage < 100)
+                              LinearProgressIndicator(
+                                value: loadingPercentage / 100.0,
+                              ),
+                          ],
+                        )
+                      : showNetworkErrorScreen(),
+                ),
+              );
+            } else {
+              return Container();
+            }
+          }),
     );
   }
 
@@ -124,10 +137,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       );
     } else {
       const snackBar = SnackBar(content: Text('Unable to handle your request'));
-      if(context.mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
   }
-
 }
