@@ -13,6 +13,7 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController webViewController;
+  final ScrollController scrollController = ScrollController();
   var loadingPercentage = 0;
   bool hasInternetConnection = true;
 
@@ -69,39 +70,50 @@ class _WebViewScreenState extends State<WebViewScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: FutureBuilder(
-          future: webViewController.canGoBack(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final canWebViewGoBack = snapshot.data as bool;
-              return PopScope(
-                canPop: !canWebViewGoBack,
-                onPopInvokedWithResult: (didPop, result) {
-                  if (!didPop) {
-                    goToPreviousPage(canWebViewGoBack);
-                  }
-                },
-                child: Scaffold(
-                  body: hasInternetConnection
-                      ? Stack(
-                          children: [
-                            Container(
-                              child:
-                                  WebViewWidget(controller: webViewController),
-                            ),
-                            if (loadingPercentage > 0 &&
-                                loadingPercentage < 100)
-                              LinearProgressIndicator(
-                                value: loadingPercentage / 100.0,
-                              ),
-                          ],
-                        )
-                      : showNetworkErrorScreen(),
+        future: webViewController.canGoBack(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final canWebViewGoBack = snapshot.data as bool;
+            return PopScope(
+              canPop: !canWebViewGoBack,
+              onPopInvokedWithResult: (didPop, result) {
+                if (!didPop) {
+                  goToPreviousPage(canWebViewGoBack);
+                }
+              },
+              child: Scaffold(
+                body: RefreshIndicator(
+                  // Wrap with RefreshIndicator
+                  onRefresh: refreshWebView,
+                  // Call the refresh function
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    physics: AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height,
+                      child: hasInternetConnection
+                          ? Stack(
+                              children: [
+                                WebViewWidget(controller: webViewController),
+                                if (loadingPercentage > 0 &&
+                                    loadingPercentage < 100)
+                                  LinearProgressIndicator(
+                                    value: loadingPercentage / 100.0,
+                                  ),
+                              ],
+                            )
+                          : showNetworkErrorScreen(),
+                    ),
+                  ),
                 ),
-              );
-            } else {
-              return Container();
-            }
-          }),
+              ),
+            );
+          } else {
+            return const Center(
+                child: CircularProgressIndicator()); // Loading indicator
+          }
+        },
+      ),
     );
   }
 
@@ -141,5 +153,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
+  }
+
+  Future<void> refreshWebView() async {
+    setState(() {
+      loadingPercentage = 0; // Reset loading percentage before reload
+    });
+    webViewController.reload();
   }
 }
