@@ -83,18 +83,15 @@ class _WebViewScreenState extends State<WebViewScreen> {
                 child: Scaffold(
                   body: hasInternetConnection
                       ? Stack(
-                    children: [
-                      Container(
-                        child:
-                        WebViewWidget(controller: webViewController),
-                      ),
-                      if (loadingPercentage > 0 &&
-                          loadingPercentage < 100)
-                        LinearProgressIndicator(
-                          value: loadingPercentage / 100.0,
-                        ),
-                    ],
-                  )
+                          children: [
+                            WebViewWidget(controller: webViewController),
+                            if (loadingPercentage > 0 &&
+                                loadingPercentage < 100)
+                              LinearProgressIndicator(
+                                value: loadingPercentage / 100.0,
+                              ),
+                          ],
+                        )
                       : showNetworkErrorScreen(),
                 ),
               );
@@ -111,16 +108,16 @@ class _WebViewScreenState extends State<WebViewScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off, size: 100, color: Colors.black),
-          SizedBox(height: 20),
-          Text(
+          const Icon(Icons.wifi_off, size: 100, color: Colors.black),
+          const SizedBox(height: 20),
+          const Text(
             'Could not load the page.',
             style: TextStyle(fontSize: 18),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: retryConnection,
-            child: Text('Try Again'),
+            child: const Text('Try Again'),
           ),
         ],
       ),
@@ -137,7 +134,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       );
     } else {
       const snackBar = SnackBar(content: Text('Unable to handle your request'));
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }

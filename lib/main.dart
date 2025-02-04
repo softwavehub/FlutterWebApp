@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutterwebapp/webview_screen.dart';
 
 // Website to be loaded inside the app
-const WEBSITE_URL = 'https://flutter.dev';
+const websiteUrl = 'https://flutter.dev';
 
 void main() {
-  runApp(HomeScreen());
+  runApp(const HomeScreen());
 }
 
 class HomeScreen extends StatelessWidget {
@@ -13,8 +13,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: WebViewScreen(url: WEBSITE_URL),
+    return const MaterialApp(
+      home: WebViewScreen(url: websiteUrl),
     );
   }
 }
