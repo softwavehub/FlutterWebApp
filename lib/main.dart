@@ -5,16 +5,25 @@ import 'package:flutterwebapp/webview_screen.dart';
 const websiteUrl = 'https://flutter.dev';
 
 void main() {
-  runApp(const HomeScreen());
+  // اطمینان از آماده‌سازی ویجت‌های Flutter
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(const MyApp());
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: WebViewScreen(url: websiteUrl),
+    return MaterialApp(
+      title: 'Flutter WebView App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      debugShowCheckedModeBanner: false,
+      home: const WebViewScreen(url: websiteUrl),
     );
   }
 }
