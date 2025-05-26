@@ -18,8 +18,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
 
   @override
   void initState() {
-    initializeWebView();
     super.initState();
+    initializeWebView();
   }
 
   void initializeWebView() {
@@ -27,24 +27,37 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: (NavigationRequest request) async {
-          // If URL is external, open it in a relevant app
           if (request.url.startsWith(widget.url)) {
             return NavigationDecision.navigate;
           } else {
-            launchExternalUrl(request.url);
+            await launchExternalUrl(request.url);
             return NavigationDecision.prevent;
           }
         },
         onProgress: (progress) {
-          setState(() {
-            loadingPercentage = progress;
-          });
+          if (mounted) {
+            setState(() {
+              loadingPercentage = progress;
+            });
+          }
+        },
+        onPageFinished: (url) {
+          if (mounted) {
+            setState(() {
+              hasInternetConnection = true;
+              loadingPercentage = 100;
+            });
+          }
         },
         onWebResourceError: (error) {
-          if (error.errorType != WebResourceErrorType.unknown) {
-            setState(() {
-              hasInternetConnection = false;
-            });
+          if (error.errorType == WebResourceErrorType.hostLookup ||
+              error.errorType == WebResourceErrorType.connect) { // اصلاح خطا
+            if (mounted) {
+              setState(() {
+                hasInternetConnection = false;
+                loadingPercentage = 0;
+              });
+            }
           }
         },
       ))
@@ -52,10 +65,12 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   Future<void> retryConnection() async {
-    setState(() {
-      loadingPercentage = 0;
-      hasInternetConnection = true;
-    });
+    if (mounted) {
+      setState(() {
+        loadingPercentage = 0;
+        hasInternetConnection = true;
+      });
+    }
     webViewController.reload();
   }
 
@@ -68,50 +83,56 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: FutureBuilder(
-          future: webViewController.canGoBack(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final canWebViewGoBack = snapshot.data as bool;
-              return PopScope(
-                canPop: !canWebViewGoBack,
-                onPopInvokedWithResult: (didPop, result) {
-                  if (!didPop) {
-                    goToPreviousPage(canWebViewGoBack);
-                  }
-                },
-                child: Scaffold(
-                  body: hasInternetConnection
-                      ? Stack(
-                          children: [
-                            WebViewWidget(controller: webViewController),
-                            if (loadingPercentage > 0 &&
-                                loadingPercentage < 100)
-                              LinearProgressIndicator(
-                                value: loadingPercentage / 100.0,
-                              ),
-                          ],
-                        )
-                      : showNetworkErrorScreen(),
-                ),
-              );
-            } else {
-              return Container();
-            }
-          }),
+      child: FutureBuilder<bool>(
+        future: webViewController.canGoBack(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final canWebViewGoBack = snapshot.data!;
+          return PopScope(
+            canPop: !canWebViewGoBack,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) {
+                goToPreviousPage(canWebViewGoBack);
+              }
+            },
+            child: Scaffold(
+              body: hasInternetConnection
+                  ? RefreshIndicator(
+                      onRefresh: retryConnection,
+                      child: Stack(
+                        children: [
+                          WebViewWidget(controller: webViewController),
+                          if (loadingPercentage > 0 && loadingPercentage < 100)
+                            LinearProgressIndicator(
+                              value: loadingPercentage / 100.0,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                        ],
+                      ),
+                    )
+                  : showNetworkErrorScreen(),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  // Returns a network error widget
   Widget showNetworkErrorScreen() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off, size: 100, color: Colors.black),
+          Icon(
+            Icons.wifi_off,
+            size: 100,
+            color: Theme.of(context).colorScheme.error,
+          ),
           const SizedBox(height: 20),
           const Text(
-            'Could not load the page.',
+            'Could not load the page. Check your connection.',
             style: TextStyle(fontSize: 18),
           ),
           const SizedBox(height: 20),
@@ -124,19 +145,14 @@ class _WebViewScreenState extends State<WebViewScreen> {
     );
   }
 
-  // Passes the received URL to be opened by another application
   Future<void> launchExternalUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to handle your request')),
       );
-    } else {
-      const snackBar = SnackBar(content: Text('Unable to handle your request'));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      }
     }
   }
 }
