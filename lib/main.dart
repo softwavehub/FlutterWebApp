@@ -5,7 +5,7 @@ import 'package:flutterwebapp/webview_screen.dart';
 const websiteUrl = 'https://flutter.dev';
 
 void main() {
-  // اطمینان از آماده‌سازی ویجت‌های Flutter
+// Ensure Flutter widgets are prepared
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const MyApp());

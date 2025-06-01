@@ -51,7 +51,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         },
         onWebResourceError: (error) {
           if (error.errorType == WebResourceErrorType.hostLookup ||
-              error.errorType == WebResourceErrorType.connect) { // اصلاح خطا
+              error.errorType == WebResourceErrorType.connect) { // Error correction
             if (mounted) {
               setState(() {
                 hasInternetConnection = false;
