@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutterwebapp/webview_screen.dart';
+import 'package:flutterwebapp/screen/webview_screen.dart';
 
 // Website to be loaded inside the app
-const websiteUrl = 'https://flutter.dev';
+const websiteUrl = 'https://mobinaebadi.com/';
 
 void main() {
 // Ensure Flutter widgets are prepared
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const WebViewScreen(url: websiteUrl),
+      home: WebViewerScreen(url: websiteUrl),
     );
   }
 }
