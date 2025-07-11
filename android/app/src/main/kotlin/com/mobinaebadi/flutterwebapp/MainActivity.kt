@@ -1,4 +1,4 @@
-package com.mobinaebadi.flutterwebapp
+package com.softwavehub.silverleaf
 
 import io.flutter.embedding.android.FlutterActivity
 
