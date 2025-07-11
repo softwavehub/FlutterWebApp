@@ -17,7 +17,7 @@
         </intent>
     </queries>
     <application
-        android:label="FlutterWebApp"
+        android:label="SilverLeaf"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
